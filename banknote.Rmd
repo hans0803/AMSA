@@ -104,22 +104,3 @@ for(i in 1:5){
 }
 print(paste0(s3/2, "%"))
 ```
-
-# Logistic Regression
-
-```{r, warning = FALSE, message = FALSE}
-s3 <- 0
-for(i in 1:5){
-  d_test <- banknote[kf[[i]],]
-  d_train <- banknote[-kf[[i]],]
-
-  logitfit <- glm(Status ~ ., d_train[,-7], family = binomial)
-  if(i==1){
-    print(summary(logitfit))
-  }
-  p3 <- predict(logitfit, d_test, type = "response")
-  print(table(round(p3), d_test$Status))
-  s3 <- s3+sum(table(round(p3), d_test$Status)[c(1,4)])
-}
-print(paste0(s3/2, "%"))
-```
