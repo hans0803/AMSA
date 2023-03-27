@@ -1,0 +1,125 @@
+---
+title: "Swiss Banknote Data"
+author: "Cheng-Han Shih"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+---
+
+```{r, warning = FALSE, message = FALSE}
+library(MixGHD)
+library(APLM)
+library(corrplot)
+library(DT)
+```
+
+# Data
+
+```{r}
+data(banknote)
+datatable(banknote)
+```
+
+```{r}
+str(banknote)
+```
+
+```{r}
+plot(banknote)
+```
+
+
+```{r}
+banknote$Status  <- as.numeric(banknote$Status)-1
+```
+
+```{r}
+corr_matrix <- cor(banknote)
+corrplot(corr_matrix, method = "circle", type = "upper", tl.col = "black")
+```
+
+```{r}
+kf <- kfcv(banknote, 20230327, 5)
+```
+
+# Naive Regression
+
+```{r}
+s1 <- 0
+for(i in 1:5){
+  d_test <- banknote[kf[[i]],]
+  d_train <- banknote[-kf[[i]],]
+
+  naivefit <- lm(Status ~ ., d_train)
+  if(i==1){
+    print(summary(naivefit))
+  }
+  p1 <- predict(naivefit, d_test, type = "response")
+  print(table(round(p1), d_test$Status))
+  s1 <- s1+sum(table(round(p1), d_test$Status)[c(1,4)])
+}
+print(paste0(s1/2, "%"))
+```
+
+# Naive Regression with model selection
+
+```{r}
+s2 <- 0
+for(i in 1:5){
+  d_test <- banknote[kf[[i]],]
+  d_train <- banknote[-kf[[i]],]
+
+  naivefit_s <- fselect(d_train$Status, d_train[,2:7])
+  if(i==1){
+    print(summary(naivefit_s))
+  }
+  p2 <- predict(naivefit_s, d_test, type = "response")
+  print(table(round(p2), d_test$Status))
+  s2 <- s2+sum(table(round(p2), d_test$Status)[c(1,4)])
+}
+print(paste0(s2/2, "%"))
+```
+
+# Logistic Regression
+
+```{r, warning = FALSE, message = FALSE}
+s3 <- 0
+for(i in 1:5){
+  d_test <- banknote[kf[[i]],]
+  d_train <- banknote[-kf[[i]],]
+
+  logitfit <- glm(Status ~ ., d_train, family = binomial)
+  if(i==1){
+    print(summary(logitfit))
+  }
+  p3 <- predict(logitfit, d_test, type = "response")
+  print(table(round(p3), d_test$Status))
+  s3 <- s3+sum(table(round(p3), d_test$Status)[c(1,4)])
+}
+print(paste0(s3/2, "%"))
+```
+
+# Logistic Regression
+
+```{r, warning = FALSE, message = FALSE}
+s3 <- 0
+for(i in 1:5){
+  d_test <- banknote[kf[[i]],]
+  d_train <- banknote[-kf[[i]],]
+
+  logitfit <- glm(Status ~ ., d_train[,-7], family = binomial)
+  if(i==1){
+    print(summary(logitfit))
+  }
+  p3 <- predict(logitfit, d_test, type = "response")
+  print(table(round(p3), d_test$Status))
+  s3 <- s3+sum(table(round(p3), d_test$Status)[c(1,4)])
+}
+print(paste0(s3/2, "%"))
+```
